@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="SwagLabs-Landscape-Suite" verbose="2" parallel="false">
+
+    <parameter name="orientation" value="LANDSCAPE"/>
+
+    <listeners>
+        <listener class-name="com.swaglabs.listeners.TestListener"/>
+    </listeners>
+
+    <test name="Login Tests - Landscape">
+        <classes>
+            <class name="com.swaglabs.tests.LoginTest"/>
+        </classes>
+    </test>
+
+    <test name="Product Browse and Cart Tests - Landscape">
+        <classes>
+            <class name="com.swaglabs.tests.ProductBrowseAndCartTest"/>
+        </classes>
+    </test>
+
+    <test name="Checkout Flow Tests - Landscape">
+        <classes>
+            <class name="com.swaglabs.tests.CheckoutFlowTest"/>
+        </classes>
+    </test>
+
+    <test name="Menu Validation Tests - Landscape">
+        <classes>
+            <class name="com.swaglabs.tests.MenuValidationTest"/>
+        </classes>
+    </test>
+
+</suite>

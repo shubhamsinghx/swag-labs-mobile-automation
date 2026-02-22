@@ -1,0 +1,337 @@
+name: Swag Labs Mobile Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      orientation:
+        description: 'Device orientation (portrait/landscape/both)'
+        required: false
+        default: 'both'
+      platform:
+        description: 'Execution platform (local/lambdatest/browserstack)'
+        required: false
+        default: 'local'
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+  ANDROID_API_LEVEL: 33
+  ANDROID_TARGET: google_apis
+  ANDROID_ARCH: x86_64
+  ANDROID_EMULATOR_NAME: test_emulator
+
+jobs:
+  test-portrait:
+    name: Run Tests - Portrait Mode
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.orientation == 'portrait' ||
+      github.event.inputs.orientation == 'both'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Appium and UiAutomator2 driver
+        run: |
+          npm install -g appium
+          appium driver install uiautomator2
+
+      - name: Enable KVM (Linux)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create and start Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: ${{ env.ANDROID_TARGET }}
+          arch: ${{ env.ANDROID_ARCH }}
+          profile: pixel_6
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            # Start Appium in background
+            appium --address 127.0.0.1 --port 4723 --relaxed-security &
+            sleep 10
+
+            # Install APK on emulator
+            adb install app/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk || true
+
+            # Run Portrait tests
+            mvn clean test -Pportrait -Dexecution.platform=${{ github.event.inputs.platform || 'local' }} \
+              -Ddevice.name="emulator-5554" \
+              -Dplatform.version="${{ env.ANDROID_API_LEVEL }}" \
+              || true
+
+      - name: Copy Allure results (Portrait)
+        if: always()
+        run: |
+          mkdir -p allure-results-portrait
+          cp -r target/allure-results/* allure-results-portrait/ 2>/dev/null || true
+
+      - name: Upload Portrait test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-portrait
+          path: allure-results-portrait/
+          retention-days: 30
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-portrait
+          path: reports/screenshots/
+          retention-days: 30
+
+  test-landscape:
+    name: Run Tests - Landscape Mode
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.orientation == 'landscape' ||
+      github.event.inputs.orientation == 'both'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Appium and UiAutomator2 driver
+        run: |
+          npm install -g appium
+          appium driver install uiautomator2
+
+      - name: Enable KVM (Linux)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create and start Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          target: ${{ env.ANDROID_TARGET }}
+          arch: ${{ env.ANDROID_ARCH }}
+          profile: pixel_6
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            # Start Appium in background
+            appium --address 127.0.0.1 --port 4723 --relaxed-security &
+            sleep 10
+
+            # Install APK on emulator
+            adb install app/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk || true
+
+            # Run Landscape tests
+            mvn clean test -Plandscape -Dexecution.platform=${{ github.event.inputs.platform || 'local' }} \
+              -Ddevice.name="emulator-5554" \
+              -Dplatform.version="${{ env.ANDROID_API_LEVEL }}" \
+              || true
+
+      - name: Copy Allure results (Landscape)
+        if: always()
+        run: |
+          mkdir -p allure-results-landscape
+          cp -r target/allure-results/* allure-results-landscape/ 2>/dev/null || true
+
+      - name: Upload Landscape test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-landscape
+          path: allure-results-landscape/
+          retention-days: 30
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-landscape
+          path: reports/screenshots/
+          retention-days: 30
+
+  generate-report:
+    name: Generate Report & Send Email
+    runs-on: ubuntu-latest
+    needs: [test-portrait, test-landscape]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Portrait results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-portrait
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Download Landscape results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-landscape
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Download Portrait screenshots
+        uses: actions/download-artifact@v4
+        with:
+          name: screenshots-portrait
+          path: reports/screenshots/
+        continue-on-error: true
+
+      - name: Download Landscape screenshots
+        uses: actions/download-artifact@v4
+        with:
+          name: screenshots-landscape
+          path: reports/screenshots/
+        continue-on-error: true
+
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@v1.9
+        with:
+          allure_results: allure-results
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
+
+      - name: Deploy Allure Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      - name: Extract test summary
+        id: summary
+        if: always()
+        run: |
+          # Parse Allure results to extract summary
+          TOTAL=0; PASSED=0; FAILED=0; SKIPPED=0; RETRIED=0
+
+          if [ -d "allure-results" ]; then
+            for f in allure-results/*-result.json; do
+              if [ -f "$f" ]; then
+                STATUS=$(python3 -c "import json; d=json.load(open('$f')); print(d.get('status','unknown'))" 2>/dev/null || echo "unknown")
+                TOTAL=$((TOTAL + 1))
+                case "$STATUS" in
+                  passed) PASSED=$((PASSED + 1)) ;;
+                  failed) FAILED=$((FAILED + 1)) ;;
+                  skipped) SKIPPED=$((SKIPPED + 1)) ;;
+                esac
+
+                # Check for retries
+                RETRIES=$(python3 -c "import json; d=json.load(open('$f')); print(len(d.get('retries',[])))" 2>/dev/null || echo "0")
+                RETRIED=$((RETRIED + RETRIES))
+              fi
+            done
+          fi
+
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          echo "retried=$RETRIED" >> $GITHUB_OUTPUT
+
+          REPO_NAME="${{ github.repository }}"
+          REPORT_URL="https://${REPO_NAME%%/*}.github.io/${REPO_NAME##*/}/"
+          echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
+
+      - name: Send email report
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Swag Labs Mobile Test Report — ${{ github.ref_name }} #${{ github.run_number }}"
+          to: ${{ secrets.REPORT_EMAIL_TO }}
+          from: ${{ secrets.SMTP_USERNAME }}
+          html_body: |
+            <h2>Swag Labs Mobile Test Execution Report</h2>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Run:</strong> #${{ github.run_number }}</p>
+            <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+            <hr>
+
+            <h3>Test Summary</h3>
+            <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">
+              <tr style="background-color: #f2f2f2;">
+                <th>Metric</th><th>Count</th>
+              </tr>
+              <tr><td>Total Tests Executed</td><td><strong>${{ steps.summary.outputs.total }}</strong></td></tr>
+              <tr style="color: green;"><td>Passed</td><td><strong>${{ steps.summary.outputs.passed }}</strong></td></tr>
+              <tr style="color: red;"><td>Failed</td><td><strong>${{ steps.summary.outputs.failed }}</strong></td></tr>
+              <tr style="color: orange;"><td>Skipped</td><td><strong>${{ steps.summary.outputs.skipped }}</strong></td></tr>
+              <tr style="color: blue;"><td>Retried (Flaky)</td><td><strong>${{ steps.summary.outputs.retried }}</strong></td></tr>
+            </table>
+
+            <h3>Links</h3>
+            <ul>
+              <li><a href="${{ steps.summary.outputs.report_url }}">Allure Test Report (Screenshots & Logs)</a></li>
+              <li><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">GitHub Actions Run</a></li>
+            </ul>
+
+            <h3>Retry/Flaky Test Summary</h3>
+            <p>Tests retried due to flakiness: <strong>${{ steps.summary.outputs.retried }}</strong></p>
+            <p>Retry limit per test: <strong>2 attempts</strong></p>
+
+            <hr>
+            <p style="color: gray; font-size: 12px;">
+              Automated report from Swag Labs Mobile Automation Framework.
+              Run triggered on commit to <code>${{ github.ref_name }}</code>.
+            </p>
+        continue-on-error: true
+
+      - name: Upload Allure Report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
