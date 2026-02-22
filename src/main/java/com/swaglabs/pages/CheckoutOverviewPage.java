@@ -15,6 +15,7 @@ import java.util.List;
 public class CheckoutOverviewPage extends BasePage {
 
     // ==================== Locators ====================
+    private static final By OVERVIEW_HEADER = By.xpath("//android.widget.TextView[@text='CHECKOUT: OVERVIEW']");
     private static final By FINISH_BUTTON = AppiumBy.accessibilityId("test-FINISH");
     private static final By CANCEL_BUTTON = AppiumBy.accessibilityId("test-CANCEL");
     private static final By ITEM_TOTAL = AppiumBy.accessibilityId("test-Item total");
@@ -84,6 +85,6 @@ public class CheckoutOverviewPage extends BasePage {
 
     @Override
     public boolean isPageLoaded() {
-        return isDisplayed(FINISH_BUTTON);
+        return isDisplayed(OVERVIEW_HEADER);
     }
 }

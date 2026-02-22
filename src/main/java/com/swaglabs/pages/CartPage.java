@@ -15,6 +15,7 @@ import java.util.List;
 public class CartPage extends BasePage {
 
     // ==================== Locators ====================
+    private static final By CART_HEADER = By.xpath("//android.widget.TextView[@text='YOUR CART']");
     private static final By CART_ITEMS = AppiumBy.accessibilityId("test-Item");
     private static final By CHECKOUT_BUTTON = AppiumBy.accessibilityId("test-CHECKOUT");
     private static final By CONTINUE_SHOPPING = AppiumBy.accessibilityId("test-CONTINUE SHOPPING");
@@ -53,6 +54,7 @@ public class CartPage extends BasePage {
 
     @Step("Proceed to checkout")
     public void tapCheckout() {
+        scrollDown();
         tap(CHECKOUT_BUTTON);
     }
 
@@ -72,6 +74,6 @@ public class CartPage extends BasePage {
 
     @Override
     public boolean isPageLoaded() {
-        return isDisplayed(CHECKOUT_BUTTON);
+        return isDisplayed(CART_HEADER);
     }
 }

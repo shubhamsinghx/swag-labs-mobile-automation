@@ -1,5 +1,6 @@
 package com.swaglabs.tests;
 
+import com.swaglabs.config.ConfigReader;
 import com.swaglabs.driver.DriverManager;
 import com.swaglabs.pages.*;
 import com.swaglabs.utils.OrientationHelper;
@@ -12,7 +13,11 @@ import org.testng.annotations.*;
 
 /**
  * BaseTest provides common setup and teardown logic for all test classes.
- * Handles driver initialization, orientation setting, and Allure environment info.
+ *
+ * Lifecycle:
+ *   @BeforeClass  — create driver once per test class
+ *   @BeforeMethod — reset app to login screen (fast, no session restart)
+ *   @AfterClass   — quit driver once per test class
  *
  * TestNG parameter "orientation" (PORTRAIT/LANDSCAPE) controls the device orientation.
  */
@@ -34,28 +39,40 @@ public abstract class BaseTest {
     protected static final String STANDARD_USER = "standard_user";
     protected static final String PASSWORD = "secret_sauce";
 
+    private static final String APP_PACKAGE = "com.swaglabsmobileapp";
+
+    /**
+     * Creates the Appium driver once per test class and sets orientation.
+     */
     @Parameters({"orientation"})
-    @BeforeMethod(alwaysRun = true)
-    public void setUp(@Optional("PORTRAIT") String orientation) {
-        LOG.info("Setting up test — orientation: {}", orientation);
-
-        // Initialize the Appium driver
+    @BeforeClass(alwaysRun = true)
+    public void setUpDriver(@Optional("PORTRAIT") String orientation) {
+        LOG.info("Initializing driver — orientation: {}", orientation);
         DriverManager.initDriver();
-
-        // Set device orientation
         OrientationHelper.setOrientation(orientation);
-
-        // Initialize page objects
         initializePageObjects();
-
-        // Add environment info to Allure
         Allure.parameter("Orientation", orientation);
         Allure.parameter("Platform", "Android");
     }
 
-    @AfterMethod(alwaysRun = true)
+    /**
+     * Resets the app to the login screen before each test method.
+     * Much faster than creating a new driver session.
+     * Subclasses can override to also perform login after reset.
+     */
+    @BeforeMethod(alwaysRun = true)
+    public void resetApp() {
+        LOG.info("Resetting app to start screen");
+        DriverManager.getDriver().terminateApp(APP_PACKAGE);
+        DriverManager.getDriver().activateApp(APP_PACKAGE);
+    }
+
+    /**
+     * Quits the driver once after all tests in the class have run.
+     */
+    @AfterClass(alwaysRun = true)
     public void tearDown() {
-        LOG.info("Tearing down test — quitting driver");
+        LOG.info("Tearing down — quitting driver");
         DriverManager.quitDriver();
     }
 
@@ -74,7 +91,6 @@ public abstract class BaseTest {
 
     /**
      * Performs login with the standard user credentials.
-     * Can be called by any test that needs to start from a logged-in state.
      */
     protected void loginAsStandardUser() {
         loginPage.login(STANDARD_USER, PASSWORD);

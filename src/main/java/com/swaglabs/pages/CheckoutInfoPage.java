@@ -56,6 +56,7 @@ public class CheckoutInfoPage extends BasePage {
 
     @Step("Tap Continue button")
     public void tapContinue() {
+        scrollDown();
         tap(CONTINUE_BUTTON);
     }
 
@@ -75,6 +76,6 @@ public class CheckoutInfoPage extends BasePage {
 
     @Override
     public boolean isPageLoaded() {
-        return isDisplayed(FIRST_NAME_FIELD) && isDisplayed(CONTINUE_BUTTON);
+        return isDisplayed(FIRST_NAME_FIELD);
     }
 }

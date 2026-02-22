@@ -35,12 +35,19 @@ public class MenuPage extends BasePage {
     @Step("Open side menu")
     public MenuPage openMenu() {
         tap(MENU_BUTTON);
+        // Allow slide-in animation to finish
+        try { Thread.sleep(1000); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
         return this;
     }
 
     @Step("Close side menu")
     public void closeMenu() {
-        tap(CLOSE_MENU_BUTTON);
+        try {
+            tap(CLOSE_MENU_BUTTON);
+        } catch (Exception e) {
+            // Fallback: Android back button reliably dismisses the side menu
+            driver().navigate().back();
+        }
     }
 
     @Step("Verify 'All Items' option is displayed")

@@ -7,8 +7,6 @@ import io.qameta.allure.*;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Optional;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 /**
@@ -24,10 +22,9 @@ import org.testng.annotations.Test;
 public class MenuValidationTest extends BaseTest {
 
     @Override
-    @Parameters({"orientation"})
     @BeforeMethod(alwaysRun = true)
-    public void setUp(@Optional("PORTRAIT") String orientation) {
-        super.setUp(orientation);
+    public void resetApp() {
+        super.resetApp();
         loginAsStandardUser();
     }
 
