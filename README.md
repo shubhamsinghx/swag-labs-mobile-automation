@@ -7,7 +7,7 @@ Appium-based mobile test automation framework for the **Swag Labs** Android app 
 - **Language:** Java 17
 - **Build Tool:** Maven
 - **Test Framework:** TestNG 7.9
-- **Automation:** Appium Java Client 9.x (UiAutomator2)
+- **Automation:** Appium Java Client 8.6.0 (UiAutomator2)
 - **Design Pattern:** Page Object Model (POM)
 - **Reporting:** Allure Reports
 - **CI/CD:** GitHub Actions
@@ -44,13 +44,15 @@ swag-labs-mobile-automation/
 │   ├── LoginTest.java                         # Login test scenarios
 │   ├── ProductBrowseAndCartTest.java          # Browse & cart tests
 │   ├── CheckoutFlowTest.java                  # Checkout E2E tests
-│   └── MenuValidationTest.java               # Menu validation tests
+│   ├── MenuValidationTest.java               # Menu validation tests
+│   └── E2EFlowTest.java                      # Single end-to-end flow test
 └── src/test/resources/
     ├── config.properties                      # Local config
     ├── config-lambdatest.properties           # LambdaTest config
     ├── config-browserstack.properties         # BrowserStack config
     ├── testng-portrait.xml                    # Portrait test suite
-    └── testng-landscape.xml                   # Landscape test suite
+    ├── testng-landscape.xml                   # Landscape test suite
+    └── testng-e2e.xml                         # E2E single-flow suite
 ```
 
 ## Test Scenarios
@@ -79,8 +81,9 @@ swag-labs-mobile-automation/
 | `MenuValidationTest` | All Items navigates to products | TC_MENU_004 |
 | `MenuValidationTest` | Logout returns to login page | TC_MENU_005 |
 | `MenuValidationTest` | Menu validation after E2E flow | TC_MENU_006 |
+| `E2EFlowTest` | Complete E2E flow: Login → Browse → Cart → Checkout → Order → Menu | TC_E2E_001 |
 
-**Total: 22 test cases** covering all 8 assignment scenarios.
+**Total: 23 test cases** covering all 8 assignment scenarios.
 
 ## Prerequisites
 
@@ -131,6 +134,9 @@ mvn clean test -Plandscape
 
 # Both modes
 mvn clean test -Pportrait && mvn test -Plandscape
+
+# E2E single-flow test only
+mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testng-e2e.xml
 ```
 
 ## Running on Cloud Platforms
