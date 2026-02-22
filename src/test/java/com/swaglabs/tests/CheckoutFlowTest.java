@@ -6,6 +6,8 @@ import io.qameta.allure.*;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Optional;
+import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 /**
@@ -27,8 +29,9 @@ public class CheckoutFlowTest extends BaseTest {
     private static final String ZIP_CODE = "10001";
 
     @Override
+    @Parameters({"orientation"})
     @BeforeMethod(alwaysRun = true)
-    public void setUp(String orientation) {
+    public void setUp(@Optional("PORTRAIT") String orientation) {
         super.setUp(orientation);
         loginAsStandardUser();
     }

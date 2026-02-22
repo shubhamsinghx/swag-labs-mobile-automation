@@ -97,7 +97,7 @@ swag-labs-mobile-automation/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/swag-labs-mobile-automation.git
+git clone https://github.com/shubhamsinghx/swag-labs-mobile-automation.git
 cd swag-labs-mobile-automation
 ```
 
@@ -213,4 +213,4 @@ You can manually trigger the workflow via GitHub Actions UI with custom paramete
 
 ## Author
 
-Swag Labs Mobile Automation Framework
+Shubham Singh — [GitHub](https://github.com/shubhamsinghx)
